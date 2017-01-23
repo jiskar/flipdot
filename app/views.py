@@ -7,7 +7,8 @@ from app import app
 @app.route('/output')
 @app.route('/day/<int:day>')
 def output(day=0):
-	return word_of_the_day(day, alternate_site=True)
+	# return word_of_the_day(day, alternate_site=True)
+	return trending_on_twitter()
 
 
 def word_of_the_day(day=0, alternate_site=False):
@@ -26,3 +27,22 @@ def word_of_the_day(day=0, alternate_site=False):
 		return wordlist[day][0]
 	except:
 		return ''
+
+
+
+def trending_on_twitter():
+	#Import the necessary methods from tweepy library
+	import tweepy, json, random
+	from credentials import *
+
+	auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+	auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+	api = tweepy.API(auth)
+
+	trends1 = api.trends_place(23424909)
+	hashtags = [x['name'] for x in trends1[0]['trends'] if x['name'].find('#') ==0]
+	print hashtags
+	output = ''
+	# for hashtag in hashtags:
+		# output += hashtag + '<br>'
+	return random.choice(hashtags)
