@@ -62,5 +62,8 @@ target/
 .ipynb_checkpoints
 
 venv
+<<<<<<< HEAD
 
+=======
+>>>>>>> fix
 credentials.py

@@ -7,27 +7,33 @@ from app import app
 @app.route('/output')
 @app.route('/day/<int:day>')
 def output(day=0):
-	# return word_of_the_day(day, alternate_site=True)
-	return trending_on_twitter()
+	return word_of_the_day(day, site='nytimes')
 
 
-def word_of_the_day(day=0, alternate_site=False):
+def word_of_the_day(day=0, site='taalbank'):
 	wordlist = []
-	if not alternate_site:
-		response = requests.get('http://www.vandale.nl/woord-van-de-dag')
-		soup = bs4.BeautifulSoup(response.text, "html.parser")
-		for node in soup.findAll("h2", { "class" : "woord-van-de-dag-title" }):
-			wordlist.append(node.findAll(text=True))
-	else:
+	if site == 'taalbank':
 		response = requests.get('http://www.taalbank.nl/index.php/category/woordvandedag/')
 		soup = bs4.BeautifulSoup(response.text, "html.parser")
-		for node in soup.findAll("h1", { "class" : "uk-article-title" }):
-			wordlist.append(node.findAll(text=True))
+		for node in soup.findAll("h2", { "class" : "entry-title" }):
+			text = ''.join(node.findAll(text=True))
+			text.encode('ascii', 'ignore')
+			wordlist.append(text)
+		wordlist.pop(0)
+	elif site == 'nytimes':
+		response = requests.get('https://www.nytimes.com/column/learning-word-of-the-day')
+		soup = bs4.BeautifulSoup(response.text, "html.parser")
+		for node in soup.findAll("h2", { "class" : "headline" }):
+			text = ''.join(node.findAll(text=True))
+			# print text
+			text = text.split('Word + Quiz: ')[1].strip()
+			text.encode('ascii', 'ignore')
+			wordlist.append(text)
+	print wordlist
 	try:
-		return wordlist[day][0]
+		return wordlist[day]
 	except:
 		return ''
-
 
 
 def trending_on_twitter():
