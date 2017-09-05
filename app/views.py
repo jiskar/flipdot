@@ -1,13 +1,15 @@
 import requests, bs4
 from flask import render_template
 from app import app
+import json
 
 @app.route('/index')
 @app.route('/')
 @app.route('/output')
 @app.route('/day/<int:day>')
 def output(day=0):
-	return word_of_the_day(day, site='nytimes')
+	# return word_of_the_day(day, site='nytimes')
+	return onewordnews()
 
 
 def word_of_the_day(day=0, site='taalbank'):
@@ -52,3 +54,19 @@ def trending_on_twitter():
 	# for hashtag in hashtags:
 		# output += hashtag + '<br>'
 	return random.choice(hashtags)
+
+def onewordnews():
+	wordlist = []
+	try:
+		response = json.loads(requests.get('http://one-word-news-server.cfapps.io/headlines/uk/all').text)
+		word = response['World']['word']
+		return word
+	except:
+		return ''
+
+
+# ideas:
+# gold to eur value
+# use the sound as an alarm
+# date
+# word clock ('time for bed, time to wake up')
