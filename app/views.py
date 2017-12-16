@@ -2,6 +2,7 @@ import requests, bs4
 from flask import render_template
 from app import app
 import json
+import requests
 
 @app.route('/index')
 @app.route('/')
@@ -9,7 +10,13 @@ import json
 @app.route('/day/<int:day>')
 def output(day=0):
 	# return word_of_the_day(day, site='nytimes')
-	return onewordnews()
+	return jasper()
+
+
+def jasper():
+	r = requests.get('https://jaspervanloenen.com/bord')
+	print r.text
+	return r.text
 
 
 def word_of_the_day(day=0, site='taalbank'):
