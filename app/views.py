@@ -15,8 +15,9 @@ def output(day=0):
 
 def jasper():
 	r = requests.get('https://jaspervanloenen.com/bord')
-	print r.text
-	return r.text
+	text = r.text.rstrip()
+	print text
+	return text
 
 
 def word_of_the_day(day=0, site='taalbank'):
