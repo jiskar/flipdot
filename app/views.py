@@ -4,6 +4,7 @@ from app import app
 import json
 import requests
 import forex_python
+import math
 
 @app.route('/index')
 @app.route('/')
@@ -26,7 +27,8 @@ def bitcoinprice():
 	from forex_python.bitcoin import BtcConverter
 	b = BtcConverter() # force_decimal=True to get Decimal rates
 	price = b.get_latest_price('EUR')
-	return str(price)
+	price = math.floor(price)
+	return "BTC: " + str(price) + " EUR"
 
 
 def word_of_the_day(day=0, site='taalbank'):
