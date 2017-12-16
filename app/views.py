@@ -28,6 +28,7 @@ def bitcoinprice():
 	b = BtcConverter() # force_decimal=True to get Decimal rates
 	price = b.get_latest_price('EUR')
 	price = math.floor(price)
+	price = int(price)
 	return "BTC: " + str(price) + " EUR"
 
 
