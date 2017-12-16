@@ -12,8 +12,8 @@ import math
 @app.route('/day/<int:day>')
 def output(day=0):
 	# return word_of_the_day(day, site='nytimes')
-	# return jasper()
-	return bitcoinprice()
+	return jasper()
+	# return bitcoinprice()
 
 
 def jasper():
@@ -29,6 +29,7 @@ def bitcoinprice():
 	price = b.get_latest_price('EUR')
 	price = math.floor(price)
 	price = int(price)
+	print 
 	return "BTC: " + str(price) + " EUR"
 
 
