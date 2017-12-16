@@ -3,6 +3,7 @@ from flask import render_template
 from app import app
 import json
 import requests
+import forex_python
 
 @app.route('/index')
 @app.route('/')
@@ -10,7 +11,8 @@ import requests
 @app.route('/day/<int:day>')
 def output(day=0):
 	# return word_of_the_day(day, site='nytimes')
-	return jasper()
+	# return jasper()
+	return bitcoinprice()
 
 
 def jasper():
@@ -18,6 +20,13 @@ def jasper():
 	text = r.text.rstrip()
 	print text
 	return text
+
+
+def bitcoinprice():
+	from forex_python.bitcoin import BtcConverter
+	b = BtcConverter() # force_decimal=True to get Decimal rates
+	price = b.get_latest_price('EUR')
+	return str(price)
 
 
 def word_of_the_day(day=0, site='taalbank'):
