@@ -121,6 +121,6 @@ def soarcast():
         # show the first event:
         first_event = sorted(days)[0]
         # return "soaring {} {}% chc".format(first_event.strftime("%a").lower(), days[first_event])
-        return "{} {}% soar chc!".format(first_event.strftime("%a").lower(), days[first_event])
+        return "{} {}% soar chc".format(first_event.strftime("%a").lower(), days[first_event])
     else:
         return ''
