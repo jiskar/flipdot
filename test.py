@@ -1,3 +1,3 @@
 from app import views
 
-print views.bitcoinprice()
+print views.output()
