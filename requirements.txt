@@ -4,3 +4,4 @@ beautifulsoup4
 gunicorn
 tweepy
 forex_python
+icalendar
