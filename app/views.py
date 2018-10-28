@@ -5,6 +5,7 @@ import json
 import requests
 import forex_python
 import math
+import datetime
 
 @app.route('/index')
 @app.route('/')
@@ -12,9 +13,16 @@ import math
 @app.route('/day/<int:day>')
 def output(day=0):
     # return word_of_the_day(day, site='nytimes')
-    return soarcast()
+    soaralert = soarcast()
+    if soaralert:
+        return soaralert
+    else:
+        return date()
+
     # return bitcoinprice()
 
+def date():
+    return datetime.datetime.now().strftime("%d %b")
 
 def jasper():
     r = requests.get('https://jaspervanloenen.com/bord')
