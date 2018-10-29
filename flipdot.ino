@@ -1,10 +1,10 @@
 // Written by Jiskar (jiskar.nl), 2016
 
 //
-// Script for controlling a Krueger DOT-matric (flip-dot) sign using the IBIS protocol.
-// Tested and working on a Krueger 16x80 from 2001 with an MX3 control board.
-// This code is writting for a Particle Photon. 
-// Connection to the board: the serial interface requires 19V logic. Photon pin D6 is connected to a transistor switching the data line between 19V and ground
+// Script for controlling a Krueger DOT-matrix (flip-dot) sign with a Particle Photon.
+// The interface to the board is a 19V serial interface (one direction) using the IBIS protocol.
+// Hardware: the serial interface requires 19V logic. Photon pin D6 is connected to a transistor switching the data line between 19V and ground
+// Tested and working on a 2001 Krueger 16x80 with an MX3 control board.
 //
 
 #include "HttpClient/HttpClient.h"
@@ -18,8 +18,6 @@ HttpClient http;
 
 // Headers currently need to be set at init, useful for API keys etc.
 http_header_t headers[] = {
-    //  { "Content-Type", "application/json" },
-    //  { "Accept" , "application/json" },
     { "Accept" , "*/*"},
     { NULL, NULL } // NOTE: Always terminate headers will NULL
 };
@@ -29,36 +27,36 @@ http_response_t response;
 
 
 void setup() {
-     pinMode(sendPin, OUTPUT);    // sets pin as output
-     pinMode(LED, OUTPUT);    // sets pin as output
-     Particle.subscribe("flipdotdirect", directControl);
-     Particle.subscribe("flipdottext", setText);
+     pinMode(sendPin, OUTPUT);    // serial interface to the krueger board
+     pinMode(LED, OUTPUT);
+     Particle.subscribe("flipdotdirect", directControl, MY_DEVICES);
+     Particle.subscribe("flipdottext", setText, MY_DEVICES);
      Particle.publish("flipdotboard has started");
 }
 
 
+// main loop
 void loop() {
-    delay(2500);
+
+    // poll my server for a textstring:
     request.hostname = "flipdot.herokuapp.com";
     request.port = 80;
-    // request.path = "/day/" + String(j);
     request.path = "/output";
-
     http.get(request, response, headers);
+    Particle.publish("http response:", response.body); // for debugging
+
+    // if the string was updated, send it to the board:
     if (response.body != currentSentence){
         currentSentence = response.body;
         setText("flipdottext", response.body);
     }
 
-    //counter for looping through words
-    // j++;  // counter
-    // if (j == 10){
-        // j=0;
-    // }
+    delay(2500);
+
 }
 
-void directControl(const char *event, const char *data) {
-    // sends a give string directly to the board, usefull when doing external formatting
+void directControl(const char *event, const char *data){
+    // sends a given string directly to the board, usefull when doing external formatting. NB: will only work if you include the correct control characters.
     i++;
     String sentence = String(data);
     Particle.publish("eventData:", sentence);
@@ -67,52 +65,53 @@ void directControl(const char *event, const char *data) {
 }
 
 
-void setText(const char *event, const char *data) {
-    // adds formatting characters to a string and sends it to the board
-    i++;
+void setText(const char *event, const char *data){
+    // sends a string to the board. This function adds all the needed control characters and then calls the serial routines to transmit the data to the board.
+
     String sentence = String(data);
     String controlchars;
     int length = sentence.length();
+    Particle.publish("setting text:", sentence);
 
-    //set number of lines and text size
+    //determine text size and number of lines
     if (length < 10){
         controlchars = "\n.BI@MBI@M      ";   //single row, big font
     }else if (length < 13){
-        controlchars = "\n.AI@MBI@M      ";   //single row, medium font   
+        controlchars = "\n.AI@MBI@M      ";   //single row, medium font
     }else if (length < 16){
         controlchars = "\n.CI@MBI@M      ";   //single row, small font
     }else{
         String firstRow = sentence.substring(0,12);
         String secondRow = sentence.substring(12, 24);
         sentence = firstRow + "    " + secondRow;
-        controlchars = "\n.IIAIBI@M      ";  // two rows
+        controlchars = "\n.IIAIBI@M      ";  // two rows. UPDATE 2018: seems broken :(
     }
-    
-    // length = sentence.length();
+    Particle.publish("sentence:", sentence);
     sentence = "zA5" + sentence;  // add message type
     for (int h=0; h < (64 - length); h++){
         sentence += ' ';  // fill out with spaces until string is exactly 64 characters
     }
     sentence += controlchars;
 
-    writeString(sentence, sentence.length());
-    loop();
+    writeString(sentence, sentence.length());  // send data to board
+    loop(); // return to main loop
 }
 
 
-void writeString(String sentence, int length) {
+
+void writeString(String sentence, int length){
     //sends a command-string to the flipdotboard
-    
+
     char parity = 0x46;
     char parityByte = 0x7F; //parity calculation starts with 0x46 according to IBIS specs
     char current;
-    
+
     for(int nnn=0; nnn < length; nnn++){
         current = sentence.charAt(nnn);
         writeByte(current);
         parityByte = parityByte ^ current;
     }
-    
+
     writeByte(0x0D);
     parityByte = parityByte ^ 0x0D;
     // Particle.publish("PARITY:", String(parityByte));
@@ -120,26 +119,26 @@ void writeString(String sentence, int length) {
 }
 
 
-void writeByte(uint8_t c) {
-    // bitbangs byte out with 7bits, two stop bits and an even parity bit
+void writeByte(uint8_t c){
+    // bitbangs a byte out with 7bits, two stop bits and an even parity bit
 
     digitalWrite(LED, HIGH);  // to indicate sending
     int periodMicroSecs = 833;  // 1200 baud
     bool parity = 0;
-    
+
     // start bit:
     writePin(LOW);
-    delayMicroseconds(periodMicroSecs); 
-    
+    delayMicroseconds(periodMicroSecs);
+
     // 7 bits of data:
     for(uint8_t b = 0; b < 7; b++){
       writePin(c & 0x01);
-      
+
       parity = parity ^ (c & 0x01);
       c >>= 1;
       delayMicroseconds(periodMicroSecs);
     }
-    
+
     // even parity bit
     if(parity) {
         writePin(HIGH);
@@ -148,15 +147,18 @@ void writeByte(uint8_t c) {
         writePin(LOW);
     }
     delayMicroseconds(periodMicroSecs);
-    
+
     // two stop bits
     writePin(HIGH);
     delayMicroseconds(periodMicroSecs*2);
-    
+
     digitalWrite(LED, LOW);
     };
-        
-void writePin(bool value) {
+
+
+void writePin(bool value)
+    // sends a bit to the serial pin
+    {
       if(value)
       {
         pinResetFast(sendPin);
@@ -165,4 +167,4 @@ void writePin(bool value) {
       {
         pinSetFast(sendPin);
       }
-    };  
+    };

@@ -6,43 +6,43 @@ from app import app
 import json
 import requests
 import forex_python
-import math
 import datetime
+import os
+
+# Max characters on flipdotboard:
+# abcdefghi > large font
+# abcdefghijkl > medium font
+# abcdefghijklmno > small font
 
 @app.route('/index')
 @app.route('/')
 @app.route('/output')
 @app.route('/day/<int:day>')
 def output(day=0):
-    # return word_of_the_day(day, site='nytimes')
+    # This is the view that the photon requests. The string returned here will be shown on the flipdotboard.
     soaralert = soarcast()
     if soaralert:
         return soaralert
     else:
         return weather()
 
-    # return bitcoinprice()
 
 def weather():
     import pyowm
-
-    owm = pyowm.OWM('0834fca6801ebf806a7495e1cc28536b')  # You MUST provide a valid API key
+    api_key = os.environ.get('OWM_API_KEY')  # pull from heroku's config vars
+    owm = pyowm.OWM(api_key)  # You MUST provide a valid API key
 
     # Search for current weather in Rotterdam
     observation = owm.weather_at_place('Rotterdam,NL')
     w = observation.get_weather()
     try:
-        print(w)                      # <Weather - reference time=2013-12-18 09:20,
-        # print dir(w)
-                                      # status=Clouds>
-
-        # Weather details
+        # print(w)                      # <Weather - reference time=2013-12-18 09:20,
         # print w.get_wind()                  # {'speed': 4.6, 'deg': 330}
         # print w.get_humidity(), '%'              # 87
+        # print w.get_visibility_distance()
+        # status = w.get_status()
         rain = w.get_rain()
         snow = w.get_snow()
-        status = w.get_status()
-        # print w.get_visibility_distance()
         temperature = w.get_temperature('celsius')['temp']  # {'temp_max': 10.5, 'temp': 9.7, 'temp_min': 9.0}
         temperature = int(round(float(temperature)))
 
@@ -54,9 +54,6 @@ def weather():
             report = "{}*C".format(temperature)
 
         return date() + " " + report
-        # Search current weather observations in the surroundings of
-        # lat=22.57W, lon=43.12S (Rio de Janeiro, BR)
-        # observation_list = owm.weather_around_coords(-22.57, -43.12)
     except Exception as e:
         print e
         return date()
@@ -65,13 +62,14 @@ def date():
     return datetime.datetime.now().strftime("%d %b")
 
 def jasper():
+    # pulls a string from jasper's server:
     r = requests.get('https://jaspervanloenen.com/bord')
     text = r.text.rstrip()
     print text
     return text
 
-
 def bitcoinprice():
+    # shows the current btc price
     from forex_python.bitcoin import BtcConverter
     b = BtcConverter() # force_decimal=True to get Decimal rates
     price = b.get_latest_price('EUR')
@@ -82,6 +80,7 @@ def bitcoinprice():
 
 
 def word_of_the_day(day=0, site='taalbank'):
+    # shows the word of the day
     wordlist = []
     if site == 'taalbank':
         response = requests.get('http://www.taalbank.nl/index.php/category/woordvandedag/')
@@ -108,7 +107,7 @@ def word_of_the_day(day=0, site='taalbank'):
 
 
 def trending_on_twitter():
-    #Import the necessary methods from tweepy library
+    # shows the top trending word on twitter
     import tweepy, json, random
     from credentials import auth
 
@@ -125,6 +124,7 @@ def trending_on_twitter():
     return random.choice(hashtags)
 
 def onewordnews():
+    # pulls the one word from onewordnews.com
     wordlist = []
     try:
         response = json.loads(requests.get('http://one-word-news-server.cfapps.io/headlines/uk/all').text)
@@ -134,14 +134,8 @@ def onewordnews():
         return ''
 
 
-# ideas:
-# gold to eur value
-# use the sound as an alarm
-# date
-# word clock ('time for bed, time to wake up')
-
-
 def soarcast():
+    # checks for nice paraglider-soaring winds.
     # if the weather is good, returns a day and chance on soaring like "wed -> 90% chance on soaring"
     import urllib2
     from icalendar import Calendar
@@ -163,12 +157,8 @@ def soarcast():
             elif days[date] < chance:
                 days[date] = chance
     if days:
-        # for day, chance in sorted(days.iteritems()):
-            # print "{}-> {}% chance on soaring!".format(day.strftime("%a"), chance)
-
         # show the first event:
         first_event = sorted(days)[0]
-        # return "soaring {} {}% chc".format(first_event.strftime("%a").lower(), days[first_event])
         return "{} {}% soar!".format(first_event.strftime("%a").lower(), days[first_event])
     else:
         return ''
