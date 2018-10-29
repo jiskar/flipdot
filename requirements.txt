@@ -5,3 +5,4 @@ gunicorn
 tweepy
 forex_python
 icalendar
+pyowm
