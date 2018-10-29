@@ -6,4 +6,4 @@ tweepy
 forex_python
 icalendar
 pyowm
-dotenv
+python-dotenv
