@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import requests, bs4
 from flask import render_template
 from app import app
@@ -17,9 +19,43 @@ def output(day=0):
     if soaralert:
         return soaralert
     else:
-        return date()
+        return weather()
 
     # return bitcoinprice()
+
+def weather():
+    import pyowm
+
+    owm = pyowm.OWM('0834fca6801ebf806a7495e1cc28536b')  # You MUST provide a valid API key
+
+    # Search for current weather in Rotterdam
+    observation = owm.weather_at_place('Rotterdam,NL')
+    w = observation.get_weather()
+    print(w)                      # <Weather - reference time=2013-12-18 09:20,
+    # print dir(w)
+                                  # status=Clouds>
+
+    # Weather details
+    # print w.get_wind()                  # {'speed': 4.6, 'deg': 330}
+    # print w.get_humidity(), '%'              # 87
+    rain = w.get_rain()
+    snow = w.get_snow()
+    status = w.get_status()
+    # print w.get_visibility_distance()
+    temperature = w.get_temperature('celsius')['temp']  # {'temp_max': 10.5, 'temp': 9.7, 'temp_min': 9.0}
+
+    if rain != {}:
+        report = "{}*C R".format(temperature)
+    elif snow != {}:
+        report = "{}*C S".format(temperature)
+    else:
+        report = "{}*C".format(temperature)
+
+    return date() + " " + report
+    # Search current weather observations in the surroundings of
+    # lat=22.57W, lon=43.12S (Rio de Janeiro, BR)
+    # observation_list = owm.weather_around_coords(-22.57, -43.12)
+
 
 def date():
     return datetime.datetime.now().strftime("%d %b")
@@ -70,7 +106,7 @@ def word_of_the_day(day=0, site='taalbank'):
 def trending_on_twitter():
     #Import the necessary methods from tweepy library
     import tweepy, json, random
-    from credentials import *
+    from credentials import auth
 
     auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
     auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
