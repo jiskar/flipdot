@@ -61,9 +61,9 @@ def weather():
 def date():
     return datetime.datetime.now().strftime("%d %b")
 
-def jasper():
-    # pulls a string from jasper's server:
-    r = requests.get('https://jaspervanloenen.com/bord')
+def friendly_server():
+    # pulls a string directly from a URL:
+    r = requests.get(os.environ.get('FRIENDLY_SERVER_URL'))
     text = r.text.rstrip()
     print text
     return text
