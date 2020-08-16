@@ -34,11 +34,11 @@ def output(day=0):
 def countdown():
     def f(value):
         return str(int(value)).zfill(2)
-    time_left = datetime.datetime.now() - countdown_date
+    time_left = countdown_date - datetime.datetime.now()
     hours, remainder = divmod(time_left.total_seconds(), 3600)
     minutes, seconds = divmod(remainder, 60)
 
-    return 'T {}h {}m'.format(f(hours), f(minutes), f(seconds))
+    return 'T -{} hours'.format(f(hours), f(minutes), f(seconds))
 
 def weather():
     import pyowm
