@@ -9,6 +9,8 @@ import forex_python
 import datetime
 import os
 
+countdown_date = datetime.datetime(month=8, year=2020, day=19, hour=8)
+
 # Max characters on flipdotboard:
 # abcdefghi > large font
 # abcdefghijkl > medium font
@@ -21,11 +23,20 @@ import os
 def output(day=0):
     # This is the view that the photon requests. The string returned here will be shown on the flipdotboard.
     soaralert = soarcast()
+    time_left = countdown()
+    if time_left:
+        return time_left
     if soaralert:
         return soaralert
     else:
         return weather()
 
+def countdown():
+    time_left = datetime.datetime.now() - countdown_date
+    hours, remainder = divmod(time_left.total_seconds(), 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    return 'T %s:%s:%s' % (int(hours), int(minutes), int(seconds))
 
 def weather():
     import pyowm
@@ -141,24 +152,27 @@ def soarcast():
     from icalendar import Calendar
 
     url = "http://soarcast.nl/sc/overview.php?timeOffset=0&formSubmitted=true&soaren=on&bigwing=on&spot_1=on&changeValues=Wijzig+selectie&ical=true"
-    contents = urllib2.urlopen(url).read()
+    try:
+        contents = urllib2.urlopen(url, timeout=2).read()
 
-    days = {}
+        days = {}
 
-    # create a list of days and their chance on soaring:
-    gcal = Calendar.from_ical(contents)
-    for component in gcal.walk():
-        if component.name == "VEVENT":
-            date = component.get('dtstart').dt.date()
-            summary = component.get('summary').title()
-            chance = int(summary[-3:-1])
-            if not date in days.keys():
-                days[date] = chance
-            elif days[date] < chance:
-                days[date] = chance
-    if days:
-        # show the first event:
-        first_event = sorted(days)[0]
-        return "{} {}% soar!".format(first_event.strftime("%a").lower(), days[first_event])
-    else:
-        return ''
+        # create a list of days and their chance on soaring:
+        gcal = Calendar.from_ical(contents)
+        for component in gcal.walk():
+            if component.name == "VEVENT":
+                date = component.get('dtstart').dt.date()
+                summary = component.get('summary').title()
+                chance = int(summary[-3:-1])
+                if not date in days.keys():
+                    days[date] = chance
+                elif days[date] < chance:
+                    days[date] = chance
+        if days:
+            # show the first event:
+            first_event = sorted(days)[0]
+            return "{} {}% soar!".format(first_event.strftime("%a").lower(), days[first_event])
+        else:
+            return ''
+    except urllib2.URLError:
+        return None
