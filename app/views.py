@@ -8,8 +8,10 @@ import requests
 import forex_python
 import datetime
 import os
+import socket
 
-countdown_date = datetime.datetime(month=8, year=2020, day=19, hour=8)
+# countdown_date = datetime.datetime(month=8, year=2020, day=19, hour=8)
+countdown_date = datetime.datetime(month=8, year=2020, day=18, hour=22)
 
 # Max characters on flipdotboard:
 # abcdefghi > large font
@@ -37,8 +39,22 @@ def countdown():
     time_left = countdown_date - datetime.datetime.now()
     hours, remainder = divmod(time_left.total_seconds(), 3600)
     minutes, seconds = divmod(remainder, 60)
+    # print("time left:", time_left)
 
-    return 'T -{} hours'.format(f(hours), f(minutes), f(seconds))
+    if time_left > datetime.timedelta(hours=1):
+        return 'T -{} hours'.format(f(hours), f(minutes), f(seconds))
+
+    elif time_left > datetime.timedelta(0):
+        return 'T -{}h {}m'.format(f(hours), f(minutes), f(seconds))
+
+    elif socket.gethostbyname('snijlab.nl') == '159.69.85.161':
+        return "ONLINE!"
+
+    else:
+        # return 'T +{}h {}m'.format(f(-1*hours), f(minutes), f(seconds))
+        return 'Deploying..'.format(f(-1*hours), f(minutes), f(seconds))
+
+
 
 def weather():
     import pyowm
