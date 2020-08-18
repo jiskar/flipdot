@@ -10,8 +10,8 @@ import datetime
 import os
 import socket
 
-# countdown_date = datetime.datetime(month=8, year=2020, day=19, hour=8)
-countdown_date = datetime.datetime(month=8, year=2020, day=18, hour=22)
+countdown_date = datetime.datetime(month=8, year=2020, day=19, hour=8)
+# countdown_date = datetime.datetime(month=8, year=2020, day=18, hour=22)
 
 # Max characters on flipdotboard:
 # abcdefghi > large font
