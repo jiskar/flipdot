@@ -24,14 +24,16 @@ countdown_date = datetime.datetime(month=8, year=2020, day=19, hour=8)
 @app.route('/day/<int:day>')
 def output(day=0):
     # This is the view that the photon requests. The string returned here will be shown on the flipdotboard.
-    soaralert = soarcast()
-    time_left = countdown()
-    if time_left:
-        return time_left
-    if soaralert:
-        return soaralert
-    else:
-        return weather()
+    # soaralert = soarcast()
+    # time_left = countdown()
+    # if time_left:
+    #     return time_left
+    # if soaralert:
+    #     return soaralert
+    # else:
+    #     return weather()
+
+    return "NOV: 100\% op tijd"
 
 def countdown():
     def f(value):
